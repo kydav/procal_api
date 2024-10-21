@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -69,7 +71,10 @@ func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(id int) ([]Food, err
 func (fatSecretWrapper *fatSecretWrapper) GetToken() (string, error) {
 	tokenUrl := os.Getenv("FAT_SECRET_TOKEN_URL")
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodPost, tokenUrl, nil)
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	data.Set("scope", "basic")
+	req, err := http.NewRequest(http.MethodPost, tokenUrl, strings.NewReader(data.Encode()))
 	if err != nil {
 		log.Warn("error creating request")
 		return "", errors.New("error creating request: " + err.Error())
@@ -78,6 +83,8 @@ func (fatSecretWrapper *fatSecretWrapper) GetToken() (string, error) {
 	clientSecret := os.Getenv("FAT_SECRET_CLIENT_SECRET")
 	req.SetBasicAuth(clientId, clientSecret)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	// req.Header.Add("grant_type", "client_credentials")
+	// req.Header.Add("scope", "basic")
 
 	response, err := client.Do(req)
 	if err != nil {
