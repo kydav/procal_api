@@ -10,7 +10,7 @@ type nutritionService struct {
 }
 
 type NutritionService interface {
-	FindById(ctx context.Context) (fat_secret_wrapper.Food, error)
+	FindById(ctx context.Context) (fat_secret_wrapper.FatSecretFood, error)
 }
 
 func NewNutritionService(fatSecretWrapper fat_secret_wrapper.FatSecretWrapper) NutritionService {
@@ -19,7 +19,10 @@ func NewNutritionService(fatSecretWrapper fat_secret_wrapper.FatSecretWrapper) N
 	}
 }
 
-func (service *nutritionService) FindById(ctx context.Context) (fat_secret_wrapper.Food, error) {
-	food, _ := service.fatSecretWrapper.GetFoodFromId(1641)
+func (service *nutritionService) FindById(ctx context.Context) (fat_secret_wrapper.FatSecretFood, error) {
+	food, error := service.fatSecretWrapper.GetFoodFromId(33691)
+	if error != nil {
+		return fat_secret_wrapper.FatSecretFood{}, error
+	}
 	return food, nil
 }

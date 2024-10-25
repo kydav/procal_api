@@ -15,7 +15,7 @@ import (
 
 type FatSecretWrapper interface {
 	GetFoodIdFromBarcode(barcode string) (int, error)
-	GetFoodFromId(id int) (Food, error)
+	GetFoodFromId(id int) (FatSecretFood, error)
 	SearchFoodsByName(id int) ([]Food, error)
 }
 
@@ -25,22 +25,30 @@ func NewFatSecretWrapper() FatSecretWrapper {
 	return &fatSecretWrapper{}
 }
 
+type FatSecretFood struct {
+	Food Food `json:"food"`
+}
+
 type Food struct {
-	FoodId   string    `json:"food_id"`
-	FoodName string    `json:"food_name"`
-	FoodType string    `json:"food_type"`
-	Servings []Serving `json:"servings"`
+	FoodId   int64            `json:"food_id"`
+	FoodName string           `json:"food_name"`
+	FoodType string           `json:"food_type"`
+	Servings FatSecretServing `json:"servings"`
+}
+
+type FatSecretServing struct {
+	Serving []Serving `json:"serving"`
 }
 
 type Serving struct {
-	ServingId              string `json:"serving_id"`
-	ServingDescription     string `json:"serving_description"`
-	MetricServingAmount    string `json:"metric_serving_amount"`
-	MetricServingUnit      string `json:"metric_serving_unit"`
-	NumberOfUnits          string `json:"number_of_units"`
-	MeasurementDescription string `json:"measurement_description"`
-	Calories               string `json:"calories"`
-	Protein                string `json:"protein"`
+	ServingId              int64   `json:"serving_id"`
+	ServingDescription     string  `json:"serving_description"`
+	MetricServingAmount    float64 `json:"metric_serving_amount"`
+	MetricServingUnit      string  `json:"metric_serving_unit"`
+	NumberOfUnits          float64 `json:"number_of_units"`
+	MeasurementDescription string  `json:"measurement_description"`
+	Calories               float64 `json:"calories"`
+	Protein                float64 `json:"protein"`
 }
 
 type FatSecretTokenResponse struct {
@@ -49,15 +57,22 @@ type FatSecretTokenResponse struct {
 	TokenType   string `json:"token_type"`
 }
 
+type FoodIdQuery struct {
+	FoodId int `json:"food_id"`
+}
+
 func (fatSecretWrapper *fatSecretWrapper) GetFoodIdFromBarcode(barcode string) (int, error) {
 	id := 000
 	return id, nil
 }
 
-func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(id int) (Food, error) {
-	responseData, _ := fatSecretWrapper.apiRequestWithPayload("food/v4", http.MethodGet, nil)
-	var food Food
-	if food_unmarshal_error := json.Unmarshal(responseData, &food); food_unmarshal_error == nil {
+func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(id int) (FatSecretFood, error) {
+	var food FatSecretFood
+	responseData, _ := fatSecretWrapper.apiRequestWithPayload(fmt.Sprintf("food/v4?food_id=%v&format=json", id), http.MethodGet, nil)
+	//responseData, _ := fatSecretWrapper.apiRequestWithPayload("food/barcode/find-by-id/v1?barcode=0041570054161&format=json", http.MethodGet, nil)
+
+	food_unmarshal_error := json.Unmarshal(responseData, &food)
+	if food_unmarshal_error != nil {
 		return food, food_unmarshal_error
 	}
 	return food, nil
@@ -68,47 +83,7 @@ func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(id int) ([]Food, err
 	return foods, nil
 }
 
-func (fatSecretWrapper *fatSecretWrapper) GetToken() (string, error) {
-	tokenUrl := os.Getenv("FAT_SECRET_TOKEN_URL")
-	client := &http.Client{}
-	data := url.Values{}
-	data.Set("grant_type", "client_credentials")
-	data.Set("scope", "basic")
-	req, err := http.NewRequest(http.MethodPost, tokenUrl, strings.NewReader(data.Encode()))
-	if err != nil {
-		log.Warn("error creating request")
-		return "", errors.New("error creating request: " + err.Error())
-	}
-	clientId := os.Getenv("FAT_SECRET_CLIENT_ID")
-	clientSecret := os.Getenv("FAT_SECRET_CLIENT_SECRET")
-	req.SetBasicAuth(clientId, clientSecret)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	// req.Header.Add("grant_type", "client_credentials")
-	// req.Header.Add("scope", "basic")
-
-	response, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-
-	responseData, err := io.ReadAll(response.Body)
-	if response.StatusCode != http.StatusOK {
-		return "", errors.New("non 200 status returned when trying to get token")
-	}
-
-	if err != nil {
-		return "", err
-	}
-	var result FatSecretTokenResponse
-	if err := json.Unmarshal(responseData, &result); err != nil {
-		return "", err
-	}
-
-	return result.AccessToken, nil
-}
-
 func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, verb string, body io.Reader) ([]byte, error) {
-
 	if os.Getenv("FAT_SECRET_BASE_URL") == "" {
 		return nil, errors.New("not configured to hit fat secret")
 	}
@@ -125,7 +100,8 @@ func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, ver
 		return []byte{}, err
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", auth_token))
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	//req.   Header.Add("Parameters", "method=foods.search&search_expression=toast&format=json")
 	response, err := client.Do(req)
 	if err != nil {
 		log.Warn("error during http request")
@@ -146,4 +122,41 @@ func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, ver
 		return nil, errors.New("error sending request: " + err.Error())
 	}
 	return responseData, nil
+}
+
+func (fatSecretWrapper *fatSecretWrapper) GetToken() (string, error) {
+	tokenUrl := os.Getenv("FAT_SECRET_TOKEN_URL")
+	client := &http.Client{}
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	//data.Set("scope", "basic")
+	req, err := http.NewRequest(http.MethodPost, tokenUrl, strings.NewReader(data.Encode()))
+	if err != nil {
+		log.Warn("error creating request")
+		return "", errors.New("error creating request: " + err.Error())
+	}
+	clientId := os.Getenv("FAT_SECRET_CLIENT_ID")
+	clientSecret := os.Getenv("FAT_SECRET_CLIENT_SECRET")
+	req.SetBasicAuth(clientId, clientSecret)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	response, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	responseData, err := io.ReadAll(response.Body)
+	if response.StatusCode != http.StatusOK {
+		return "", errors.New("non 200 status returned when trying to get token")
+	}
+
+	if err != nil {
+		return "", err
+	}
+	var result FatSecretTokenResponse
+	if err := json.Unmarshal(responseData, &result); err != nil {
+		return "", err
+	}
+
+	return result.AccessToken, nil
 }
