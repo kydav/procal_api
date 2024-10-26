@@ -89,15 +89,11 @@ func FoodByBarcodeFinder(writer http.ResponseWriter, request *http.Request, serv
 
 func FoodFinder(writer http.ResponseWriter, request *http.Request, service services.NutritionService) {
 	searchQuery := chi.URLParam(request, "searchQuery")
-	if searchQuery != "" {
+	if searchQuery == "" {
 		returnError(writer, "error parsing searchQuery", http.StatusInternalServerError, nil)
 	}
 	page := chi.URLParam(request, "page")
-	var pageNumber int = 0
-	if page != "" {
-		pageNumber, _ = strconv.Atoi(page)
-	}
-	foods, err := service.SearchByFoodName(request.Context(), searchQuery, pageNumber)
+	foods, err := service.SearchByFoodName(request.Context(), searchQuery, page)
 	if err != nil {
 		returnError(writer, "error finding food", http.StatusInternalServerError, err)
 	}

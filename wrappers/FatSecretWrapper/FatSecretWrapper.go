@@ -14,7 +14,7 @@ import (
 type FatSecretWrapper interface {
 	GetFoodIdFromBarcode(barcode string) (FatSecretFoodId, error)
 	GetFoodFromId(id int) (FatSecretFood, error)
-	SearchFoodsByName(searchQuery string, page *int) (FatSecretFoodsSearch, error)
+	SearchFoodsByName(searchQuery string, page *string) (FatSecretFoodsSearch, error)
 }
 
 type fatSecretWrapper struct{}
@@ -105,12 +105,13 @@ func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(id int) (FatSecretFood, 
 	return food, nil
 }
 
-func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(searchQuery string, page *int) (FatSecretFoodsSearch, error) {
+func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(searchQuery string, page *string) (FatSecretFoodsSearch, error) {
 	food := FatSecretFoodsSearch{}
-	var queryParams = fmt.Sprintf("foods/search/v3?search_expression=%v&format=json", searchQuery)
+	var pageParams string = ""
 	if page != nil {
-		queryParams = queryParams + fmt.Sprintf("&page_number=%s", page)
+		pageParams = fmt.Sprintf("?page_number=%s", *page)
 	}
+	var queryParams = fmt.Sprintf("foods/search/v3?search_expression=%s%s&format=json", searchQuery, pageParams)
 	responseData, err := fatSecretWrapper.apiRequestWithPayload(queryParams, http.MethodGet, nil)
 	if err != nil {
 		return food, err

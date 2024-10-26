@@ -13,7 +13,7 @@ type nutritionService struct {
 
 type NutritionService interface {
 	FindById(ctx context.Context, id int) (fat_secret_wrapper.FatSecretFood, error)
-	SearchByFoodName(ctx context.Context, search string, pageNumber int) ([]fat_secret_wrapper.Food, error)
+	SearchByFoodName(ctx context.Context, search string, pageNumber string) ([]fat_secret_wrapper.Food, error)
 	FindByBarcode(ctx context.Context, barcode string) (fat_secret_wrapper.FatSecretFood, error)
 }
 
@@ -49,7 +49,7 @@ func (service *nutritionService) FindByBarcode(ctx context.Context, barcode stri
 	return food, nil
 }
 
-func (service *nutritionService) SearchByFoodName(ctx context.Context, search string, pageNumber int) ([]fat_secret_wrapper.Food, error) {
+func (service *nutritionService) SearchByFoodName(ctx context.Context, search string, pageNumber string) ([]fat_secret_wrapper.Food, error) {
 	food, error := service.fatSecretWrapper.SearchFoodsByName(search, &pageNumber)
 	if error != nil {
 		return []fat_secret_wrapper.Food{}, error
