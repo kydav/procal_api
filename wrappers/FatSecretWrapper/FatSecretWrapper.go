@@ -9,14 +9,12 @@ import (
 	"net/url"
 	"os"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type FatSecretWrapper interface {
-	GetFoodIdFromBarcode(barcode string) (int, error)
+	GetFoodIdFromBarcode(barcode string) (FatSecretFoodId, error)
 	GetFoodFromId(id int) (FatSecretFood, error)
-	SearchFoodsByName(id int) ([]Food, error)
+	SearchFoodsByName(searchQuery string, page *int) (FatSecretFoodsSearch, error)
 }
 
 type fatSecretWrapper struct{}
@@ -29,8 +27,12 @@ type FatSecretFood struct {
 	Food Food `json:"food"`
 }
 
+type FatSecretFoodsArray struct {
+	Food []Food `json:"food"`
+}
+
 type Food struct {
-	FoodId   int64            `json:"food_id"`
+	FoodId   string           `json:"food_id"`
 	FoodName string           `json:"food_name"`
 	FoodType string           `json:"food_type"`
 	Servings FatSecretServing `json:"servings"`
@@ -41,14 +43,33 @@ type FatSecretServing struct {
 }
 
 type Serving struct {
-	ServingId              int64   `json:"serving_id"`
-	ServingDescription     string  `json:"serving_description"`
-	MetricServingAmount    float64 `json:"metric_serving_amount"`
-	MetricServingUnit      string  `json:"metric_serving_unit"`
-	NumberOfUnits          float64 `json:"number_of_units"`
-	MeasurementDescription string  `json:"measurement_description"`
-	Calories               float64 `json:"calories"`
-	Protein                float64 `json:"protein"`
+	ServingId              string `json:"serving_id"`
+	ServingDescription     string `json:"serving_description"`
+	MetricServingAmount    string `json:"metric_serving_amount"`
+	MetricServingUnit      string `json:"metric_serving_unit"`
+	NumberOfUnits          string `json:"number_of_units"`
+	MeasurementDescription string `json:"measurement_description"`
+	Calories               string `json:"calories"`
+	Protein                string `json:"protein"`
+}
+
+type FatSecretFoodId struct {
+	FoodId FoodId `json:"food_id"`
+}
+
+type FoodId struct {
+	Value string `json:"value"`
+}
+
+type FatSecretFoodsSearch struct {
+	FoodsSearch FoodsSearch `json:"foods_search"`
+}
+
+type FoodsSearch struct {
+	MaxResults   string              `json:"max_results"`
+	TotalResults string              `json:"total_results"`
+	PageNumber   string              `json:"page_number"`
+	Results      FatSecretFoodsArray `json:"results"`
 }
 
 type FatSecretTokenResponse struct {
@@ -57,19 +78,25 @@ type FatSecretTokenResponse struct {
 	TokenType   string `json:"token_type"`
 }
 
-type FoodIdQuery struct {
-	FoodId int `json:"food_id"`
-}
-
-func (fatSecretWrapper *fatSecretWrapper) GetFoodIdFromBarcode(barcode string) (int, error) {
-	id := 000
-	return id, nil
+func (fatSecretWrapper *fatSecretWrapper) GetFoodIdFromBarcode(barcode string) (FatSecretFoodId, error) {
+	var foodId FatSecretFoodId
+	responseData, err := fatSecretWrapper.apiRequestWithPayload(fmt.Sprintf("food/barcode/find-by-id/v1?barcode=%s&format=json", barcode), http.MethodGet, nil)
+	if err != nil {
+		return foodId, err
+	}
+	food_id_unmarshal_error := json.Unmarshal(responseData, &foodId)
+	if food_id_unmarshal_error != nil {
+		return foodId, food_id_unmarshal_error
+	}
+	return foodId, nil
 }
 
 func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(id int) (FatSecretFood, error) {
 	var food FatSecretFood
-	responseData, _ := fatSecretWrapper.apiRequestWithPayload(fmt.Sprintf("food/v4?food_id=%v&format=json", id), http.MethodGet, nil)
-	//responseData, _ := fatSecretWrapper.apiRequestWithPayload("food/barcode/find-by-id/v1?barcode=0041570054161&format=json", http.MethodGet, nil)
+	responseData, err := fatSecretWrapper.apiRequestWithPayload(fmt.Sprintf("food/v4?food_id=%v&format=json", id), http.MethodGet, nil)
+	if err != nil {
+		return food, err
+	}
 
 	food_unmarshal_error := json.Unmarshal(responseData, &food)
 	if food_unmarshal_error != nil {
@@ -78,20 +105,31 @@ func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(id int) (FatSecretFood, 
 	return food, nil
 }
 
-func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(id int) ([]Food, error) {
-	foods := []Food{}
-	return foods, nil
+func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(searchQuery string, page *int) (FatSecretFoodsSearch, error) {
+	food := FatSecretFoodsSearch{}
+	var queryParams = fmt.Sprintf("foods/search/v3?search_expression=%v&format=json", searchQuery)
+	if page != nil {
+		queryParams = queryParams + fmt.Sprintf("&page_number=%s", page)
+	}
+	responseData, err := fatSecretWrapper.apiRequestWithPayload(queryParams, http.MethodGet, nil)
+	if err != nil {
+		return food, err
+	}
+	food_unmarshal_error := json.Unmarshal(responseData, &food)
+	if food_unmarshal_error != nil {
+		return food, food_unmarshal_error
+	}
+	return food, nil
 }
 
 func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, verb string, body io.Reader) ([]byte, error) {
 	if os.Getenv("FAT_SECRET_BASE_URL") == "" {
-		return nil, errors.New("not configured to hit fat secret")
+		return nil, errors.New("missing fat secret base url")
 	}
 	url := os.Getenv("FAT_SECRET_BASE_URL") + path
 	client := &http.Client{}
 	req, err := http.NewRequest(verb, url, body)
 	if err != nil {
-		log.Warn("error creating request")
 		return nil, errors.New("error creating request: " + err.Error())
 	}
 
@@ -101,24 +139,17 @@ func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, ver
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", auth_token))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	//req.   Header.Add("Parameters", "method=foods.search&search_expression=toast&format=json")
 	response, err := client.Do(req)
 	if err != nil {
-		log.Warn("error during http request")
 		return nil, errors.New("error sending request: " + err.Error())
 	}
 
 	if response.Status[0:1] != "2" {
-		responseData, err := io.ReadAll(response.Body)
-		log.Warn(response)
-		log.Warn(responseData)
-		log.Warn(err)
 		return nil, errors.New("Unsuccessful status code returned: " + response.Status)
 	}
 
 	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Warn("unable to read body")
 		return nil, errors.New("error sending request: " + err.Error())
 	}
 	return responseData, nil
@@ -126,17 +157,24 @@ func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, ver
 
 func (fatSecretWrapper *fatSecretWrapper) GetToken() (string, error) {
 	tokenUrl := os.Getenv("FAT_SECRET_TOKEN_URL")
+	if tokenUrl == "" {
+		return "", errors.New("missing fat secret base url")
+	}
 	client := &http.Client{}
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
-	//data.Set("scope", "basic")
 	req, err := http.NewRequest(http.MethodPost, tokenUrl, strings.NewReader(data.Encode()))
 	if err != nil {
-		log.Warn("error creating request")
 		return "", errors.New("error creating request: " + err.Error())
 	}
 	clientId := os.Getenv("FAT_SECRET_CLIENT_ID")
+	if tokenUrl == "" {
+		return "", errors.New("missing fat secret client id")
+	}
 	clientSecret := os.Getenv("FAT_SECRET_CLIENT_SECRET")
+	if tokenUrl == "" {
+		return "", errors.New("missing fat secret client secret")
+	}
 	req.SetBasicAuth(clientId, clientSecret)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 

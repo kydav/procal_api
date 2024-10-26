@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
-	"procal/api/services"
-	"procal/api/wrappers/FatSecretWrapper"
+	"procal/api/routes"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -18,9 +16,8 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	fatSecretWrapper := FatSecretWrapper.NewFatSecretWrapper()
-	nutritionService := services.NewNutritionService(fatSecretWrapper)
-	nutritionService.FindById(context.Background())
+	// fatSecretWrapper := FatSecretWrapper.NewFatSecretWrapper()
+	// nutritionService := services.NewNutritionService(fatSecretWrapper)
 
 	r := chi.NewRouter()
 
@@ -28,5 +25,10 @@ func main() {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
+
+	r.Route("/api", func(r chi.Router) {
+		r.Group(routes.NutritionRoutes())
+	})
 	http.ListenAndServe(":3000", r)
+
 }
