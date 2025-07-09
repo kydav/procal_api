@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"procal/api/services"
-	"procal/api/wrappers/FatSecretWrapper"
+	"procal/services"
+	"procal/wrappers/FatSecretWrapper"
 	"strconv"
 
 	"github.com/go-chi/chi"

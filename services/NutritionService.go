@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"errors"
-	fat_secret_wrapper "procal/api/wrappers/FatSecretWrapper"
+	fat_secret_wrapper "procal/wrappers/FatSecretWrapper"
 	"strconv"
 )
 
