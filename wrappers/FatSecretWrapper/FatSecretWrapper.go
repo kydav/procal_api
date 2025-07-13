@@ -111,7 +111,8 @@ func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(searchQuery string, 
 	if page != nil {
 		pageParams = fmt.Sprintf("?page_number=%s", *page)
 	}
-	var queryParams = fmt.Sprintf("foods/search/v3?search_expression=%s%s&format=json", searchQuery, pageParams)
+	encodedQuery := url.QueryEscape(searchQuery)
+	var queryParams = fmt.Sprintf("foods/search/v3?search_expression=%s%s&format=json", encodedQuery, pageParams)
 	responseData, err := fatSecretWrapper.apiRequestWithPayload(queryParams, http.MethodGet, nil)
 	if err != nil {
 		return food, err
