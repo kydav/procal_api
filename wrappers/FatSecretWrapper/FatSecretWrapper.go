@@ -32,10 +32,11 @@ type FatSecretFoodsArray struct {
 }
 
 type Food struct {
-	FoodId   string           `json:"food_id"`
-	FoodName string           `json:"food_name"`
-	FoodType string           `json:"food_type"`
-	Servings FatSecretServing `json:"servings"`
+	FoodId    string           `json:"food_id"`
+	FoodName  string           `json:"food_name"`
+	FoodType  string           `json:"food_type"`
+	Servings  FatSecretServing `json:"servings"`
+	BrandName string           `json:"brand_name"`
 }
 
 type FatSecretServing struct {
