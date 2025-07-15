@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22.7 AS build
+FROM golang:1.24.5 AS build
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
