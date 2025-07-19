@@ -13,7 +13,7 @@ type nutritionService struct {
 
 type NutritionService interface {
 	FindById(ctx context.Context, id int) (fat_secret_wrapper.FatSecretFood, error)
-	SearchByFoodName(ctx context.Context, search string, pageNumber string) ([]fat_secret_wrapper.Food, error)
+	SearchByFoodName(ctx context.Context, search string, pageNumber string) (fat_secret_wrapper.FoodsSearch, error)
 	FindByBarcode(ctx context.Context, barcode string) (fat_secret_wrapper.FatSecretFood, error)
 }
 
@@ -38,21 +38,24 @@ func (service *nutritionService) FindByBarcode(ctx context.Context, barcode stri
 	}
 
 	if id.FoodId.Value == "" {
-		return fat_secret_wrapper.FatSecretFood{}, errors.New("No foods found")
+		return fat_secret_wrapper.FatSecretFood{}, errors.New("no foods found")
 	}
 	foodId, err := strconv.Atoi(id.FoodId.Value)
 	if err != nil {
 		return fat_secret_wrapper.FatSecretFood{}, err
 	}
-	food, error := service.fatSecretWrapper.GetFoodFromId(foodId)
+	food, err := service.fatSecretWrapper.GetFoodFromId(foodId)
+	if err != nil {
+		return fat_secret_wrapper.FatSecretFood{}, err
+	}
 
 	return food, nil
 }
 
-func (service *nutritionService) SearchByFoodName(ctx context.Context, search string, pageNumber string) ([]fat_secret_wrapper.Food, error) {
+func (service *nutritionService) SearchByFoodName(ctx context.Context, search string, pageNumber string) (fat_secret_wrapper.FoodsSearch, error) {
 	food, error := service.fatSecretWrapper.SearchFoodsByName(search, &pageNumber)
 	if error != nil {
-		return []fat_secret_wrapper.Food{}, error
+		return fat_secret_wrapper.FoodsSearch{}, error
 	}
-	return food.FoodsSearch.Results.Food, nil
+	return food.FoodsSearch, nil
 }

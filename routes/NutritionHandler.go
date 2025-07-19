@@ -97,7 +97,7 @@ func FoodFinder(writer http.ResponseWriter, request *http.Request, service servi
 	if err != nil {
 		returnError(writer, "error finding food", http.StatusInternalServerError, err)
 	}
-	if len(foods) == 0 {
+	if len(foods.TotalResults) == 0 {
 		returnError(writer, "no foods found", http.StatusNotFound, nil)
 	} else {
 		returnSuccess(writer, foods)
