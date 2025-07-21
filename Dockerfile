@@ -9,7 +9,6 @@ COPY routes/ ./routes
 COPY services/ ./services
 COPY wrappers/ ./wrappers
 COPY repository/ ./repository
-COPY middleware/ ./middleware
 COPY procal.env ./procal.env
 RUN go build -o godocker
 
