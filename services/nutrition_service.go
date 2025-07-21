@@ -24,7 +24,7 @@ func NewNutritionService(fatSecretWrapper fat_secret_wrapper.FatSecretWrapper) N
 }
 
 func (service *nutritionService) FindById(ctx context.Context, id int) (fat_secret_wrapper.FatSecretFood, error) {
-	food, error := service.fatSecretWrapper.GetFoodFromId(id)
+	food, error := service.fatSecretWrapper.GetFoodFromId(ctx, id)
 	if error != nil {
 		return fat_secret_wrapper.FatSecretFood{}, error
 	}
@@ -32,7 +32,7 @@ func (service *nutritionService) FindById(ctx context.Context, id int) (fat_secr
 }
 
 func (service *nutritionService) FindByBarcode(ctx context.Context, barcode string) (fat_secret_wrapper.FatSecretFood, error) {
-	id, error := service.fatSecretWrapper.GetFoodIdFromBarcode(barcode)
+	id, error := service.fatSecretWrapper.GetFoodIdFromBarcode(ctx, barcode)
 	if error != nil {
 		return fat_secret_wrapper.FatSecretFood{}, error
 	}
@@ -44,7 +44,7 @@ func (service *nutritionService) FindByBarcode(ctx context.Context, barcode stri
 	if err != nil {
 		return fat_secret_wrapper.FatSecretFood{}, err
 	}
-	food, err := service.fatSecretWrapper.GetFoodFromId(foodId)
+	food, err := service.fatSecretWrapper.GetFoodFromId(ctx, foodId)
 	if err != nil {
 		return fat_secret_wrapper.FatSecretFood{}, err
 	}
@@ -53,7 +53,7 @@ func (service *nutritionService) FindByBarcode(ctx context.Context, barcode stri
 }
 
 func (service *nutritionService) SearchByFoodName(ctx context.Context, search string, pageNumber string) (fat_secret_wrapper.FoodsSearch, error) {
-	food, error := service.fatSecretWrapper.SearchFoodsByName(search, &pageNumber)
+	food, error := service.fatSecretWrapper.SearchFoodsByName(ctx, search, &pageNumber)
 	if error != nil {
 		return fat_secret_wrapper.FoodsSearch{}, error
 	}

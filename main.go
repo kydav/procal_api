@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"procal/repository"
 	"procal/routes"
 
 	"github.com/go-chi/chi"
@@ -15,12 +16,14 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-
+	baseRepository := repository.NewRepository()
 	r := chi.NewRouter()
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(middleware.Logger)
+		r.Use(repository.BuildRepositoryWithContextMiddlware(baseRepository))
 		r.Group(routes.NutritionRoutes())
+		r.Group(routes.UserRoutes())
 	})
 	http.ListenAndServe("0.0.0.0:8000", r)
 

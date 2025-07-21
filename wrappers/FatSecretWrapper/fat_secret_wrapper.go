@@ -1,6 +1,7 @@
 package FatSecretWrapper
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,12 +10,13 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 type FatSecretWrapper interface {
-	GetFoodIdFromBarcode(barcode string) (FatSecretFoodId, error)
-	GetFoodFromId(id int) (FatSecretFood, error)
-	SearchFoodsByName(searchQuery string, page *string) (FatSecretFoodsSearch, error)
+	GetFoodIdFromBarcode(ctx context.Context, barcode string) (FatSecretFoodId, error)
+	GetFoodFromId(ctx context.Context, id int) (FatSecretFood, error)
+	SearchFoodsByName(ctx context.Context, searchQuery string, page *string) (FatSecretFoodsSearch, error)
 }
 
 type fatSecretWrapper struct{}
@@ -79,9 +81,14 @@ type FatSecretTokenResponse struct {
 	TokenType   string `json:"token_type"`
 }
 
-func (fatSecretWrapper *fatSecretWrapper) GetFoodIdFromBarcode(barcode string) (FatSecretFoodId, error) {
+var (
+	FatSecretToken            string
+	FatSecretTokenExpiresTime time.Time
+)
+
+func (fatSecretWrapper *fatSecretWrapper) GetFoodIdFromBarcode(ctx context.Context, barcode string) (FatSecretFoodId, error) {
 	var foodId FatSecretFoodId
-	responseData, err := fatSecretWrapper.apiRequestWithPayload(fmt.Sprintf("food/barcode/find-by-id/v1?barcode=%s&format=json", barcode), http.MethodGet, nil)
+	responseData, err := fatSecretWrapper.apiRequestWithPayload(ctx, fmt.Sprintf("food/barcode/find-by-id/v1?barcode=%s&format=json", barcode), http.MethodGet, nil)
 	if err != nil {
 		return foodId, err
 	}
@@ -92,9 +99,9 @@ func (fatSecretWrapper *fatSecretWrapper) GetFoodIdFromBarcode(barcode string) (
 	return foodId, nil
 }
 
-func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(id int) (FatSecretFood, error) {
+func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(ctx context.Context, id int) (FatSecretFood, error) {
 	var food FatSecretFood
-	responseData, err := fatSecretWrapper.apiRequestWithPayload(fmt.Sprintf("food/v4?food_id=%v&format=json", id), http.MethodGet, nil)
+	responseData, err := fatSecretWrapper.apiRequestWithPayload(ctx, fmt.Sprintf("food/v4?food_id=%v&format=json", id), http.MethodGet, nil)
 	if err != nil {
 		return food, err
 	}
@@ -106,15 +113,14 @@ func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(id int) (FatSecretFood, 
 	return food, nil
 }
 
-func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(searchQuery string, page *string) (FatSecretFoodsSearch, error) {
+func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(ctx context.Context, searchQuery string, page *string) (FatSecretFoodsSearch, error) {
 	food := FatSecretFoodsSearch{}
 	var pageParams string = ""
 	if page != nil {
 		pageParams = fmt.Sprintf("?page_number=%s", *page)
 	}
-	//encodedQuery := url.QueryEscape(searchQuery)
 	var queryParams = fmt.Sprintf("foods/search/v3?search_expression=%s%s&format=json", searchQuery, pageParams)
-	responseData, err := fatSecretWrapper.apiRequestWithPayload(queryParams, http.MethodGet, nil)
+	responseData, err := fatSecretWrapper.apiRequestWithPayload(ctx, queryParams, http.MethodGet, nil)
 	if err != nil {
 		return food, err
 	}
@@ -125,7 +131,7 @@ func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(searchQuery string, 
 	return food, nil
 }
 
-func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, verb string, body io.Reader) ([]byte, error) {
+func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(ctx context.Context, path string, verb string, body io.Reader) ([]byte, error) {
 	if os.Getenv("FAT_SECRET_BASE_URL") == "" {
 		return nil, errors.New("missing fat secret base url")
 	}
@@ -136,7 +142,7 @@ func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, ver
 		return nil, errors.New("error creating request: " + err.Error())
 	}
 
-	auth_token, err := fatSecretWrapper.GetToken()
+	auth_token, err := fatSecretWrapper.GetToken(ctx)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -158,7 +164,11 @@ func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(path string, ver
 	return responseData, nil
 }
 
-func (fatSecretWrapper *fatSecretWrapper) GetToken() (string, error) {
+func (fatSecretWrapper *fatSecretWrapper) GetToken(ctx context.Context) (string, error) {
+	if FatSecretToken != "" && FatSecretTokenExpiresTime.After(time.Now()) {
+		return FatSecretToken, nil
+	}
+
 	tokenUrl := os.Getenv("FAT_SECRET_TOKEN_URL")
 	if tokenUrl == "" {
 		return "", errors.New("missing fat secret base url")
@@ -198,6 +208,8 @@ func (fatSecretWrapper *fatSecretWrapper) GetToken() (string, error) {
 	if err := json.Unmarshal(responseData, &result); err != nil {
 		return "", err
 	}
+	FatSecretToken = result.AccessToken
+	FatSecretTokenExpiresTime = time.Now().Add(time.Duration(result.ExpiresIn) * time.Second)
 
 	return result.AccessToken, nil
 }
