@@ -16,6 +16,11 @@ type UserRepository interface {
 }
 
 func NewUserRepository(db *gorm.DB) UserRepository {
+	err := db.AutoMigrate(&entity.User{})
+	if err != nil {
+		// panicking here, since this runs on startup
+		panic(err)
+	}
 	return &userRepository{connection: db}
 }
 
