@@ -25,7 +25,7 @@ func UserRoutes() func(chi.Router) {
 }
 
 func UserHandler(writer http.ResponseWriter, request *http.Request) {
-	repoInterface := request.Context().Value("Repository")
+	repoInterface := request.Context().Value(repository.ContextKeyRepository)
 	sessionRepo, ok := repoInterface.(repository.Repository)
 	if !ok {
 		panic("could not fetch repo for session")
@@ -82,6 +82,8 @@ func UserByIdFinder(writer http.ResponseWriter, request *http.Request, service s
 		http.Error(writer, "User Not Found", http.StatusNotFound)
 		return
 	}
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
 	json.NewEncoder(writer).Encode(user)
 
 }
@@ -97,6 +99,8 @@ func UserByEmailFinder(writer http.ResponseWriter, request *http.Request, servic
 		http.Error(writer, "User Not Found", http.StatusNotFound)
 		return
 	}
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(writer).Encode(user)
 }
@@ -112,6 +116,8 @@ func CreateUser(writer http.ResponseWriter, request *http.Request, service servi
 		http.Error(writer, "Error Creating User", http.StatusInternalServerError)
 		return
 	}
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
 
 	writer.WriteHeader(http.StatusCreated)
 	json.NewEncoder(writer).Encode(createdUser)
@@ -129,6 +135,8 @@ func UpdateUser(writer http.ResponseWriter, request *http.Request, service servi
 		http.Error(writer, "Error Updating User", http.StatusInternalServerError)
 		return
 	}
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(writer).Encode(updatedUser)
 }
