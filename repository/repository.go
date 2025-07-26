@@ -14,6 +14,7 @@ import (
 type Repository interface {
 	CreateRepositoryWithContext(context.Context) Repository
 	UserRepository() UserRepository
+	GoalRepository() GoalRepository
 }
 
 func NewRepository() Repository {
@@ -46,14 +47,20 @@ func buildRepositoryStruct(db *gorm.DB) Repository {
 	return &repository{
 		connection:     db,
 		userRepository: NewUserRepository(db),
+		goalRepository: NewGoalRepository(db),
 	}
 }
 
 type repository struct {
 	connection     *gorm.DB
 	userRepository UserRepository
+	goalRepository GoalRepository
 }
 
 func (r *repository) UserRepository() UserRepository {
 	return r.userRepository
+}
+
+func (r *repository) GoalRepository() GoalRepository {
+	return r.goalRepository
 }
