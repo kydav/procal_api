@@ -24,6 +24,7 @@ func main() {
 		r.Use(repository.BuildRepositoryWithContextMiddlware(baseRepository))
 		r.Group(routes.NutritionRoutes())
 		r.Group(routes.UserRoutes())
+		r.Group(routes.GoalRoutes())
 	})
 	http.ListenAndServe("0.0.0.0:8000", r)
 
