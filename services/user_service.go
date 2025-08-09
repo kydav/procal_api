@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"procal/entity"
 	"procal/repository"
 )
@@ -23,18 +24,23 @@ func NewUserService(userRepository repository.UserRepository) UserService {
 		userRepository: userRepository,
 	}
 }
+
 func (service *userService) FindById(id int) (entity.User, error) {
 	return service.userRepository.FindById(context.Background(), id)
 }
+
 func (service *userService) FindByEmail(email string) (entity.User, error) {
 	return service.userRepository.FindByEmail(context.Background(), email)
 }
+
 func (service *userService) Create(user entity.User) (entity.User, error) {
 	return service.userRepository.Create(context.Background(), user)
 }
+
 func (service *userService) Update(user entity.User) (entity.User, error) {
 	return service.userRepository.Update(context.Background(), user)
 }
+
 func (service *userService) Delete(id int) error {
 	return service.userRepository.Delete(context.Background(), id)
 }

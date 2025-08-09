@@ -3,8 +3,9 @@ package services
 import (
 	"context"
 	"errors"
-	fat_secret_wrapper "procal/wrappers/FatSecretWrapper"
 	"strconv"
+
+	fat_secret_wrapper "procal/wrappers/FatSecretWrapper"
 )
 
 type nutritionService struct {

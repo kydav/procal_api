@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
+
 	"procal/services"
 	"procal/wrappers/FatSecretWrapper"
-	"strconv"
 
 	"github.com/go-chi/chi"
 )
@@ -33,7 +34,6 @@ func NutritionRouter(
 	request *http.Request,
 	service services.NutritionService,
 ) {
-
 	routePattern := chi.RouteContext(request.Context()).RoutePattern()
 	switch request.Method {
 	case http.MethodGet:

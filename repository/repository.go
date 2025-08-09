@@ -31,7 +31,6 @@ func NewRepository() Repository {
 	}), &gorm.Config{
 		Logger: logger,
 	})
-
 	if err != nil {
 		panic("unable to connect to database: " + err.Error())
 	}

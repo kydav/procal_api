@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"procal/entity"
 	"procal/repository"
 )
@@ -22,15 +23,19 @@ func NewGoalService(repo repository.GoalRepository) GoalService {
 		repo: repo,
 	}
 }
+
 func (s *goalService) CreateGoal(ctx context.Context, goal *entity.Goal) error {
 	return s.repo.Create(ctx, goal)
 }
+
 func (s *goalService) GetGoalByID(ctx context.Context, id string) (*entity.Goal, error) {
 	return s.repo.GetByID(ctx, id)
 }
+
 func (s *goalService) UpdateGoal(ctx context.Context, goal *entity.Goal) error {
 	return s.repo.Update(ctx, goal)
 }
+
 func (s *goalService) DeleteGoal(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }

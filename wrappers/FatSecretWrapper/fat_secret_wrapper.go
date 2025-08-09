@@ -119,7 +119,7 @@ func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(ctx context.Context,
 	if page != nil {
 		pageParams = fmt.Sprintf("?page_number=%s", *page)
 	}
-	var queryParams = fmt.Sprintf("foods/search/v3?search_expression=%s%s&format=json", searchQuery, pageParams)
+	queryParams := fmt.Sprintf("foods/search/v3?search_expression=%s%s&format=json", searchQuery, pageParams)
 	responseData, err := fatSecretWrapper.apiRequestWithPayload(ctx, queryParams, http.MethodGet, nil)
 	if err != nil {
 		return food, err
@@ -133,7 +133,7 @@ func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(ctx context.Context,
 
 func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(ctx context.Context, path string, verb string, body io.Reader) ([]byte, error) {
 	if os.Getenv("FAT_SECRET_BASE_URL") == "" {
-		return nil, errors.New("missing fat secret base url")
+		return nil, errors.New("Missing fat secret base url")
 	}
 	url := os.Getenv("FAT_SECRET_BASE_URL") + path
 	client := &http.Client{}

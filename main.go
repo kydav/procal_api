@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+
 	"procal/repository"
 	"procal/routes"
 
@@ -27,5 +28,4 @@ func main() {
 		r.Group(routes.GoalRoutes())
 	})
 	http.ListenAndServe("0.0.0.0:8000", r)
-
 }

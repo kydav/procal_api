@@ -3,10 +3,11 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+
 	"procal/entity"
 	"procal/repository"
 	"procal/services"
-	"strconv"
 
 	"github.com/go-chi/chi"
 )
@@ -85,8 +86,8 @@ func UserByIdFinder(writer http.ResponseWriter, request *http.Request, service s
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 	json.NewEncoder(writer).Encode(user)
-
 }
+
 func UserByEmailFinder(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	email := chi.URLParam(request, "email")
 	if email == "" {
@@ -104,6 +105,7 @@ func UserByEmailFinder(writer http.ResponseWriter, request *http.Request, servic
 
 	json.NewEncoder(writer).Encode(user)
 }
+
 func CreateUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	var user entity.User
 	if err := json.NewDecoder(request.Body).Decode(&user); err != nil {
@@ -140,6 +142,7 @@ func UpdateUser(writer http.ResponseWriter, request *http.Request, service servi
 
 	json.NewEncoder(writer).Encode(updatedUser)
 }
+
 func DeleteUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	id := chi.URLParam(request, "id")
 	userId, err := strconv.Atoi(id)

@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+
 	"procal/entity"
 	"procal/repository"
 	"procal/services"
@@ -19,6 +20,7 @@ func GoalRoutes() func(chi.Router) {
 		r.HandleFunc("/goal/{id}", GoalFunc)
 	}
 }
+
 func GoalHandler(writer http.ResponseWriter, request *http.Request) {
 	repoInterface := request.Context().Value(repository.ContextKeyRepository)
 	sessionRepo, ok := repoInterface.(repository.Repository)
@@ -29,6 +31,7 @@ func GoalHandler(writer http.ResponseWriter, request *http.Request) {
 	goalService := services.NewGoalService(sessionRepo.GoalRepository())
 	GoalRouter(writer, request, goalService)
 }
+
 func GoalRouter(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	routePattern := chi.RouteContext(request.Context()).RoutePattern()
 	switch request.Method {
@@ -56,6 +59,7 @@ func GoalRouter(writer http.ResponseWriter, request *http.Request, service servi
 		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
+
 func CreateGoal(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	var goal entity.Goal
 	if err := json.NewDecoder(request.Body).Decode(&goal); err != nil {
@@ -69,6 +73,7 @@ func CreateGoal(writer http.ResponseWriter, request *http.Request, service servi
 	writer.WriteHeader(http.StatusCreated)
 	json.NewEncoder(writer).Encode(goal)
 }
+
 func GetGoalByID(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	id := chi.URLParam(request, "id")
 	goal, err := service.GetGoalByID(request.Context(), id)
@@ -78,6 +83,7 @@ func GetGoalByID(writer http.ResponseWriter, request *http.Request, service serv
 	}
 	json.NewEncoder(writer).Encode(goal)
 }
+
 func UpdateGoal(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	var goal entity.Goal
 	if err := json.NewDecoder(request.Body).Decode(&goal); err != nil {
@@ -91,6 +97,7 @@ func UpdateGoal(writer http.ResponseWriter, request *http.Request, service servi
 	writer.WriteHeader(http.StatusOK)
 	json.NewEncoder(writer).Encode(goal)
 }
+
 func DeleteGoal(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	id := chi.URLParam(request, "id")
 	if err := service.DeleteGoal(request.Context(), id); err != nil {
