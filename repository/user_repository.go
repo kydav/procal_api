@@ -11,6 +11,7 @@ import (
 type UserRepository interface {
 	FindById(ctx context.Context, id int) (entity.User, error)
 	FindByEmail(ctx context.Context, email string) (entity.User, error)
+	FindByFirebaseUid(ctx context.Context, firebaseUid string) (entity.User, error)
 	Create(ctx context.Context, user entity.User) (entity.User, error)
 	Update(ctx context.Context, user entity.User) (entity.User, error)
 	Delete(ctx context.Context, id int) error
@@ -48,6 +49,15 @@ func (db *userRepository) Delete(ctx context.Context, id int) error {
 func (db *userRepository) FindByEmail(ctx context.Context, email string) (entity.User, error) {
 	var user entity.User
 	if result := db.connection.Where("email = ?", email).First(&user); result.Error != nil {
+		return user, result.Error
+	}
+	return user, nil
+}
+
+// FindByEmail implements UserRepository.
+func (db *userRepository) FindByFirebaseUid(ctx context.Context, firebaseUid string) (entity.User, error) {
+	var user entity.User
+	if result := db.connection.Where("firebase_uid = ?", firebaseUid).First(&user); result.Error != nil {
 		return user, result.Error
 	}
 	return user, nil

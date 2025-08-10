@@ -14,6 +14,7 @@ type userService struct {
 type UserService interface {
 	FindById(id int) (entity.User, error)
 	FindByEmail(email string) (entity.User, error)
+	FindByFirebaseUid(firebaseUid string) (entity.User, error)
 	Create(user entity.User) (entity.User, error)
 	Update(user entity.User) (entity.User, error)
 	Delete(id int) error
@@ -31,6 +32,10 @@ func (service *userService) FindById(id int) (entity.User, error) {
 
 func (service *userService) FindByEmail(email string) (entity.User, error) {
 	return service.userRepository.FindByEmail(context.Background(), email)
+}
+
+func (service *userService) FindByFirebaseUid(firebaseUid string) (entity.User, error) {
+	return service.userRepository.FindByFirebaseUid(context.Background(), firebaseUid)
 }
 
 func (service *userService) Create(user entity.User) (entity.User, error) {

@@ -46,6 +46,10 @@ func UserRouter(writer http.ResponseWriter, request *http.Request, service servi
 			UserByEmailFinder(writer, request, service)
 			return
 		}
+		if routePattern == "/api/user/uid/{firebaseUid}" {
+			UserByFirebaseUidFinder(writer, request, service)
+			return
+		}
 	case http.MethodPost:
 		if routePattern == "/api/user/create" {
 			CreateUser(writer, request, service)
@@ -96,6 +100,24 @@ func UserByEmailFinder(writer http.ResponseWriter, request *http.Request, servic
 	}
 
 	user, err := service.FindByEmail(email)
+	if err != nil {
+		http.Error(writer, "User Not Found", http.StatusNotFound)
+		return
+	}
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(writer).Encode(user)
+}
+
+func UserByFirebaseUidFinder(writer http.ResponseWriter, request *http.Request, service services.UserService) {
+	firebaseUid := chi.URLParam(request, "firebaseUid")
+	if firebaseUid == "" {
+		http.Error(writer, "Firebase UID is required", http.StatusBadRequest)
+		return
+	}
+
+	user, err := service.FindByFirebaseUid(firebaseUid)
 	if err != nil {
 		http.Error(writer, "User Not Found", http.StatusNotFound)
 		return
