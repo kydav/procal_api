@@ -3,7 +3,6 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"procal/entity"
 	"procal/repository"
@@ -19,9 +18,9 @@ func UserRoutes() func(chi.Router) {
 	return func(r chi.Router) {
 		r.HandleFunc("/user/{id}", UserFunc)
 		r.HandleFunc("/user/email/{email}", UserFunc)
-		r.HandleFunc("/user/create", UserFunc)
-		r.HandleFunc("/user/update", UserFunc)
-		r.HandleFunc("/user/delete/{id}", UserFunc)
+		r.HandleFunc("/user/uid/{firebaseUid}", UserFunc)
+		r.HandleFunc("/user", UserFunc)
+		r.HandleFunc("/user/{id}", UserFunc)
 	}
 }
 
@@ -51,17 +50,17 @@ func UserRouter(writer http.ResponseWriter, request *http.Request, service servi
 			return
 		}
 	case http.MethodPost:
-		if routePattern == "/api/user/create" {
+		if routePattern == "/api/user" {
 			CreateUser(writer, request, service)
 			return
 		}
 	case http.MethodPut:
-		if routePattern == "/api/user/update" {
+		if routePattern == "/api/user" {
 			UpdateUser(writer, request, service)
 			return
 		}
 	case http.MethodDelete:
-		if routePattern == "/api/user/delete/{id}" {
+		if routePattern == "/api/user/{id}" {
 			DeleteUser(writer, request, service)
 			return
 		}
@@ -72,13 +71,12 @@ func UserRouter(writer http.ResponseWriter, request *http.Request, service servi
 
 func UserByIdFinder(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	id := chi.URLParam(request, "id")
-	userId, err := strconv.Atoi(id)
-	if err != nil {
+	if id == "" {
 		http.Error(writer, "Invalid User ID", http.StatusBadRequest)
 		return
 	}
 
-	user, err := service.FindById(userId)
+	user, err := service.FindById(request.Context(), id)
 	if err != nil {
 		http.Error(writer, "User Not Found", http.StatusNotFound)
 		return
@@ -99,7 +97,7 @@ func UserByEmailFinder(writer http.ResponseWriter, request *http.Request, servic
 		return
 	}
 
-	user, err := service.FindByEmail(email)
+	user, err := service.FindByEmail(request.Context(), email)
 	if err != nil {
 		http.Error(writer, "User Not Found", http.StatusNotFound)
 		return
@@ -117,7 +115,7 @@ func UserByFirebaseUidFinder(writer http.ResponseWriter, request *http.Request, 
 		return
 	}
 
-	user, err := service.FindByFirebaseUid(firebaseUid)
+	user, err := service.FindByFirebaseUid(request.Context(), firebaseUid)
 	if err != nil {
 		http.Error(writer, "User Not Found", http.StatusNotFound)
 		return
@@ -135,7 +133,7 @@ func CreateUser(writer http.ResponseWriter, request *http.Request, service servi
 		return
 	}
 
-	createdUser, err := service.Create(user)
+	createdUser, err := service.Create(request.Context(), user)
 	if err != nil {
 		http.Error(writer, "Error Creating User", http.StatusInternalServerError)
 		return
@@ -154,7 +152,7 @@ func UpdateUser(writer http.ResponseWriter, request *http.Request, service servi
 		return
 	}
 
-	updatedUser, err := service.Update(user)
+	updatedUser, err := service.Update(request.Context(), user)
 	if err != nil {
 		http.Error(writer, "Error Updating User", http.StatusInternalServerError)
 		return
@@ -167,13 +165,12 @@ func UpdateUser(writer http.ResponseWriter, request *http.Request, service servi
 
 func DeleteUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	id := chi.URLParam(request, "id")
-	userId, err := strconv.Atoi(id)
-	if err != nil {
+	if id == "" {
 		http.Error(writer, "Invalid User ID", http.StatusBadRequest)
 		return
 	}
 
-	if err := service.Delete(userId); err != nil {
+	if err := service.Delete(request.Context(), id); err != nil {
 		http.Error(writer, "Error Deleting User", http.StatusInternalServerError)
 		return
 	}

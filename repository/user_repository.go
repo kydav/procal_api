@@ -9,12 +9,12 @@ import (
 )
 
 type UserRepository interface {
-	FindById(ctx context.Context, id int) (entity.User, error)
+	FindById(ctx context.Context, id string) (entity.User, error)
 	FindByEmail(ctx context.Context, email string) (entity.User, error)
 	FindByFirebaseUid(ctx context.Context, firebaseUid string) (entity.User, error)
 	Create(ctx context.Context, user entity.User) (entity.User, error)
 	Update(ctx context.Context, user entity.User) (entity.User, error)
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, id string) error
 }
 
 func NewUserRepository(db *gorm.DB) UserRepository {
@@ -38,7 +38,7 @@ func (db *userRepository) Create(ctx context.Context, user entity.User) (entity.
 }
 
 // Delete implements UserRepository.
-func (db *userRepository) Delete(ctx context.Context, id int) error {
+func (db *userRepository) Delete(ctx context.Context, id string) error {
 	if result := db.connection.Delete(&entity.User{}, id); result.Error != nil {
 		return result.Error
 	}
@@ -64,7 +64,7 @@ func (db *userRepository) FindByFirebaseUid(ctx context.Context, firebaseUid str
 }
 
 // FindById implements UserRepository.
-func (db *userRepository) FindById(ctx context.Context, id int) (entity.User, error) {
+func (db *userRepository) FindById(ctx context.Context, id string) (entity.User, error) {
 	var user entity.User
 	if result := db.connection.First(&user, id); result.Error != nil {
 		return user, result.Error
