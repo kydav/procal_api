@@ -66,7 +66,7 @@ func (db *userRepository) FindByFirebaseUid(ctx context.Context, firebaseUid str
 // FindById implements UserRepository.
 func (db *userRepository) FindById(ctx context.Context, id string) (entity.User, error) {
 	var user entity.User
-	if result := db.connection.First(&user, id); result.Error != nil {
+	if result := db.connection.Where("id = ?", id).First(&user); result.Error != nil {
 		return user, result.Error
 	}
 	return user, nil

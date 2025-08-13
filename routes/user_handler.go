@@ -147,7 +147,9 @@ func CreateUser(writer http.ResponseWriter, request *http.Request, service servi
 
 func UpdateUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	var user entity.User
-	if err := json.NewDecoder(request.Body).Decode(&user); err != nil {
+	decoder := json.NewDecoder(request.Body)
+	err := decoder.Decode(&user)
+	if err != nil {
 		http.Error(writer, "Invalid Request Body", http.StatusBadRequest)
 		return
 	}

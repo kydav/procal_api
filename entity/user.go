@@ -14,8 +14,8 @@ type User struct {
 	FirstName             string    `json:"FirstName" gorm:"type:varchar(70)"`
 	LastName              string    `json:"LastName" gorm:"type:varchar(70)"`
 	BirthDate             time.Time `json:"BirthDate" gorm:"type:date"`
-	CurrentWeight         int       `json:"CurrentWeight" gorm:"type:int;not_null;"`
-	Height                int       `json:"Height" gorm:"type:int;not_null;"`
+	CurrentWeight         float32   `json:"CurrentWeight" gorm:"type:float;not_null;"`
+	Height                float32   `json:"Height" gorm:"type:float;not_null;"`
 	Age                   int       `json:"Age" gorm:"type:int;not_null;"`
 	MeasurementPreference string    `json:"MeasurementPreference" gorm:"type:varchar(10);not_null;"`
 	IsActive              bool      `json:"IsActive"`
