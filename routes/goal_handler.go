@@ -81,6 +81,7 @@ func GetGoalByID(writer http.ResponseWriter, request *http.Request, service serv
 		http.Error(writer, "Goal not found", http.StatusNotFound)
 		return
 	}
+	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(goal)
 }
 
