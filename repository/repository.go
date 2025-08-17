@@ -15,6 +15,7 @@ type Repository interface {
 	CreateRepositoryWithContext(context.Context) Repository
 	UserRepository() UserRepository
 	GoalRepository() GoalRepository
+	JournalRepository() JournalRepository
 }
 
 func NewRepository() Repository {
@@ -44,16 +45,18 @@ func (repo *repository) CreateRepositoryWithContext(context context.Context) Rep
 
 func buildRepositoryStruct(db *gorm.DB) Repository {
 	return &repository{
-		connection:     db,
-		userRepository: NewUserRepository(db),
-		goalRepository: NewGoalRepository(db),
+		connection:        db,
+		userRepository:    NewUserRepository(db),
+		goalRepository:    NewGoalRepository(db),
+		journalRepository: NewJournalRepository(db),
 	}
 }
 
 type repository struct {
-	connection     *gorm.DB
-	userRepository UserRepository
-	goalRepository GoalRepository
+	connection        *gorm.DB
+	userRepository    UserRepository
+	goalRepository    GoalRepository
+	journalRepository JournalRepository
 }
 
 func (r *repository) UserRepository() UserRepository {
@@ -62,4 +65,8 @@ func (r *repository) UserRepository() UserRepository {
 
 func (r *repository) GoalRepository() GoalRepository {
 	return r.goalRepository
+}
+
+func (r *repository) JournalRepository() JournalRepository {
+	return r.journalRepository
 }

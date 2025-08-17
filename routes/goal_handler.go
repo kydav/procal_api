@@ -71,6 +71,7 @@ func CreateGoal(writer http.ResponseWriter, request *http.Request, service servi
 		return
 	}
 	writer.WriteHeader(http.StatusCreated)
+	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(goal)
 }
 
@@ -96,6 +97,7 @@ func UpdateGoal(writer http.ResponseWriter, request *http.Request, service servi
 		return
 	}
 	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(goal)
 }
 
