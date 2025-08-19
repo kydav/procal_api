@@ -14,4 +14,5 @@ type JournalEntry struct {
 	Date       time.Time `json:"Date" gorm:"type:date;not_null;"`
 	Protein    int       `json:"Protein" gorm:"type:int;not_null;"`
 	Calories   int       `json:"Calories" gorm:"type:int;not_null;"`
+	Meal       string    `json:"Meal" gorm:"type:varchar(100);not_null;"`
 }
