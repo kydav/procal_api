@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"procal/services"
 	"procal/wrappers/FatSecretWrapper"
@@ -92,8 +93,9 @@ func FoodFinder(writer http.ResponseWriter, request *http.Request, service servi
 	if searchQuery == "" {
 		returnError(writer, "error parsing searchQuery", http.StatusInternalServerError, nil)
 	}
+	searchQuerySanitized := strings.ReplaceAll(searchQuery, "\u2019", "'")
 	page := chi.URLParam(request, "page")
-	foods, err := service.SearchByFoodName(request.Context(), searchQuery, page)
+	foods, err := service.SearchByFoodName(request.Context(), searchQuerySanitized, page)
 	if err != nil {
 		returnError(writer, "error finding food", http.StatusInternalServerError, err)
 	}

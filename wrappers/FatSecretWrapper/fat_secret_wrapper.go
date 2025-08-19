@@ -54,6 +54,7 @@ type Serving struct {
 	MeasurementDescription string `json:"measurement_description"`
 	Calories               string `json:"calories"`
 	Protein                string `json:"protein"`
+	Fat                    string `json:"fat"`
 }
 
 type FatSecretFoodId struct {
