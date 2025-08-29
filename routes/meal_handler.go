@@ -6,6 +6,7 @@ import (
 	"procal/entity"
 	"procal/repository"
 	"procal/services"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -61,17 +62,26 @@ func CreateMeal(writer http.ResponseWriter, request *http.Request, service servi
 		returnError(writer, "Invalid request body", http.StatusBadRequest, err)
 		return
 	}
-	createdMeal, err := service.CreateEntry(request.Context(), &meal)
+	createdMeal, err := service.CreateEntry(request.Context(), meal)
 	if err != nil {
 		returnError(writer, "Failed to create meal", http.StatusInternalServerError, err)
 		return
 	}
-	returnSuccess(writer, createdMeal)
-	err = json.NewEncoder(writer).Encode(createdMeal)
+	if meal.Foods != nil && len(*meal.Foods) > 0 {
+		_, err := mFService.CreateMealFoods(request.Context(), *meal.Foods, strconv.FormatUint(uint64(createdMeal.ID), 10))
+		if err != nil {
+			returnError(writer, "Failed to create meal foods", http.StatusInternalServerError, err)
+			return
+		}
+	}
+	mealIDStr := strconv.FormatUint(uint64(createdMeal.ID), 10)
+	foods, err := mFService.GetFoodsByMealID(request.Context(), mealIDStr)
 	if err != nil {
-		returnError(writer, "Failed to encode response", http.StatusInternalServerError, err)
+		returnError(writer, "Failed to get meal foods", http.StatusInternalServerError, err)
 		return
 	}
+	createdMeal.Foods = &foods
+	returnSuccess(writer, createdMeal)
 }
 
 func GetUserMealsByDate(writer http.ResponseWriter, request *http.Request, service services.MealService, mFService services.MealFoodService) {
@@ -83,12 +93,20 @@ func GetUserMealsByDate(writer http.ResponseWriter, request *http.Request, servi
 		return
 	}
 
-	entries, err := service.GetEntryByUserAndDate(request.Context(), userId, date)
+	meals, err := service.GetEntryByUserAndDate(request.Context(), userId, date)
 	if err != nil {
-		returnError(writer, "Journal entry not found", http.StatusNotFound, err)
+		returnError(writer, "Meal entries not found", http.StatusNotFound, err)
 		return
 	}
-	returnSuccess(writer, entries)
+	for i := range meals {
+		foods, err := mFService.GetFoodsByMealID(request.Context(), strconv.FormatUint(uint64(meals[i].ID), 10))
+		if err != nil {
+			returnError(writer, "Failed to get meal foods", http.StatusInternalServerError, err)
+			return
+		}
+		meals[i].Foods = &foods
+	}
+	returnSuccess(writer, meals)
 }
 
 func UpdateMeal(writer http.ResponseWriter, request *http.Request, service services.MealService, mFService services.MealFoodService) {
@@ -97,7 +115,7 @@ func UpdateMeal(writer http.ResponseWriter, request *http.Request, service servi
 		returnError(writer, "Invalid request body", http.StatusBadRequest, err)
 		return
 	}
-	if err := service.UpdateEntry(request.Context(), &meal); err != nil {
+	if err := service.UpdateEntry(request.Context(), meal); err != nil {
 		returnError(writer, "Failed to update meal", http.StatusInternalServerError, err)
 		return
 	}

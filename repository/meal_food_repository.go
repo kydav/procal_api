@@ -9,10 +9,10 @@ import (
 )
 
 type MealFoodRepository interface {
-	CreateMealFood(ctx context.Context, entry *entity.MealFood) error
-	CreateMealFoods(ctx context.Context, foods []*entity.MealFood) error
-	GetByMealID(ctx context.Context, mealID string) ([]*entity.MealFood, error)
-	Update(ctx context.Context, entry *entity.MealFood) error
+	CreateMealFood(ctx context.Context, entry entity.MealFood) error
+	CreateMealFoods(ctx context.Context, foods []entity.MealFood) ([]entity.MealFood, error)
+	GetByMealID(ctx context.Context, mealID string) ([]entity.MealFood, error)
+	Update(ctx context.Context, entry entity.MealFood) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -30,22 +30,23 @@ func NewMealFoodRepository(db *gorm.DB) MealFoodRepository {
 	}
 }
 
-func (r *mealFoodRepository) CreateMealFood(ctx context.Context, entry *entity.MealFood) error {
+func (r *mealFoodRepository) CreateMealFood(ctx context.Context, entry entity.MealFood) error {
 	if err := r.db.WithContext(ctx).Create(entry).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *mealFoodRepository) CreateMealFoods(ctx context.Context, foods []*entity.MealFood) error {
-	if err := r.db.WithContext(ctx).Create(foods).Error; err != nil {
-		return err
+func (r *mealFoodRepository) CreateMealFoods(ctx context.Context, foods []entity.MealFood) ([]entity.MealFood, error) {
+
+	if result := r.db.WithContext(ctx).Create(&foods).Error; result != nil {
+		return nil, result
 	}
-	return nil
+	return foods, nil
 }
 
-func (r *mealFoodRepository) GetByMealID(ctx context.Context, mealID string) ([]*entity.MealFood, error) {
-	var foods []*entity.MealFood
+func (r *mealFoodRepository) GetByMealID(ctx context.Context, mealID string) ([]entity.MealFood, error) {
+	var foods []entity.MealFood
 	err := r.db.WithContext(ctx).Where("meal_id = ?", mealID).Find(&foods).Error
 	if err != nil {
 		return nil, err
@@ -53,7 +54,7 @@ func (r *mealFoodRepository) GetByMealID(ctx context.Context, mealID string) ([]
 	return foods, nil
 }
 
-func (r *mealFoodRepository) Update(ctx context.Context, entry *entity.MealFood) error {
+func (r *mealFoodRepository) Update(ctx context.Context, entry entity.MealFood) error {
 	return r.db.WithContext(ctx).Save(entry).Error
 }
 

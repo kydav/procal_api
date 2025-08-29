@@ -9,9 +9,9 @@ import (
 )
 
 type MealService interface {
-	CreateEntry(ctx context.Context, entry *entity.Meal) (entity.Meal, error)
-	GetEntryByUserAndDate(ctx context.Context, userID string, date time.Time) ([]*entity.Meal, error)
-	UpdateEntry(ctx context.Context, entry *entity.Meal) error
+	CreateEntry(ctx context.Context, entry entity.Meal) (entity.Meal, error)
+	GetEntryByUserAndDate(ctx context.Context, userID string, date time.Time) ([]entity.Meal, error)
+	UpdateEntry(ctx context.Context, entry entity.Meal) error
 	DeleteEntry(ctx context.Context, id string) error
 }
 
@@ -25,16 +25,15 @@ func NewMealService(repo repository.MealRepository) MealService {
 	}
 }
 
-func (s *mealService) CreateEntry(ctx context.Context, entry *entity.Meal) (entity.Meal, error) {
-	err := s.mealRepo.CreateMeal(ctx, entry)
-	return *entry, err
+func (s *mealService) CreateEntry(ctx context.Context, entry entity.Meal) (entity.Meal, error) {
+	return s.mealRepo.CreateMeal(ctx, entry)
 }
 
-func (s *mealService) GetEntryByUserAndDate(ctx context.Context, userID string, date time.Time) ([]*entity.Meal, error) {
+func (s *mealService) GetEntryByUserAndDate(ctx context.Context, userID string, date time.Time) ([]entity.Meal, error) {
 	return s.mealRepo.GetByUserAndDate(ctx, userID, date)
 }
 
-func (s *mealService) UpdateEntry(ctx context.Context, entry *entity.Meal) error {
+func (s *mealService) UpdateEntry(ctx context.Context, entry entity.Meal) error {
 	return s.mealRepo.Update(ctx, entry)
 }
 
