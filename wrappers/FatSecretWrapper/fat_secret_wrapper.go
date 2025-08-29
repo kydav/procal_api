@@ -116,7 +116,7 @@ func (fatSecretWrapper *fatSecretWrapper) GetFoodFromId(ctx context.Context, id 
 
 func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(ctx context.Context, searchQuery string, page *string) (FatSecretFoodsSearch, error) {
 	food := FatSecretFoodsSearch{}
-	var pageParams string = ""
+	var pageParams = ""
 	if page != nil {
 		pageParams = fmt.Sprintf("?page_number=%s", *page)
 	}
@@ -135,7 +135,7 @@ func (fatSecretWrapper *fatSecretWrapper) SearchFoodsByName(ctx context.Context,
 
 func (fatSecretWrapper *fatSecretWrapper) apiRequestWithPayload(ctx context.Context, path string, verb string, body io.Reader) ([]byte, error) {
 	if os.Getenv("FAT_SECRET_BASE_URL") == "" {
-		return nil, errors.New("Missing fat secret base url")
+		return nil, errors.New("missing fat secret base url")
 	}
 	url := os.Getenv("FAT_SECRET_BASE_URL") + path
 	client := &http.Client{}

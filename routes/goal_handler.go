@@ -72,7 +72,11 @@ func CreateGoal(writer http.ResponseWriter, request *http.Request, service servi
 	}
 	writer.WriteHeader(http.StatusCreated)
 	writer.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(writer).Encode(goal)
+	err := json.NewEncoder(writer).Encode(goal)
+	if err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func GetGoalByID(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
@@ -83,7 +87,11 @@ func GetGoalByID(writer http.ResponseWriter, request *http.Request, service serv
 		return
 	}
 	writer.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(writer).Encode(goal)
+	err = json.NewEncoder(writer).Encode(goal)
+	if err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func UpdateGoal(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
@@ -98,7 +106,11 @@ func UpdateGoal(writer http.ResponseWriter, request *http.Request, service servi
 	}
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(writer).Encode(goal)
+	err := json.NewEncoder(writer).Encode(goal)
+	if err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func DeleteGoal(writer http.ResponseWriter, request *http.Request, service services.GoalService) {

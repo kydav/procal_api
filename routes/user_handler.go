@@ -87,7 +87,11 @@ func UserByIdFinder(writer http.ResponseWriter, request *http.Request, service s
 	}
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
-	json.NewEncoder(writer).Encode(user)
+	err = json.NewEncoder(writer).Encode(user)
+	if err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func UserByEmailFinder(writer http.ResponseWriter, request *http.Request, service services.UserService) {
@@ -105,7 +109,10 @@ func UserByEmailFinder(writer http.ResponseWriter, request *http.Request, servic
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(writer).Encode(user)
+	if err := json.NewEncoder(writer).Encode(user); err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func UserByFirebaseUidFinder(writer http.ResponseWriter, request *http.Request, service services.UserService) {
@@ -123,7 +130,10 @@ func UserByFirebaseUidFinder(writer http.ResponseWriter, request *http.Request, 
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(writer).Encode(user)
+	if err := json.NewEncoder(writer).Encode(user); err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func CreateUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
@@ -142,7 +152,10 @@ func CreateUser(writer http.ResponseWriter, request *http.Request, service servi
 	writer.WriteHeader(http.StatusOK)
 
 	writer.WriteHeader(http.StatusCreated)
-	json.NewEncoder(writer).Encode(createdUser)
+	if err := json.NewEncoder(writer).Encode(createdUser); err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func UpdateUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
@@ -162,7 +175,10 @@ func UpdateUser(writer http.ResponseWriter, request *http.Request, service servi
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(writer).Encode(updatedUser)
+	if err := json.NewEncoder(writer).Encode(updatedUser); err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func DeleteUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {

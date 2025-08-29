@@ -109,7 +109,10 @@ func FoodFinder(writer http.ResponseWriter, request *http.Request, service servi
 func returnSuccess(writer http.ResponseWriter, responseData interface{}) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
-	json.NewEncoder(writer).Encode(responseData)
+	if err := json.NewEncoder(writer).Encode(responseData); err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 type ErrorResponse struct {
@@ -128,19 +131,9 @@ func returnError(writer http.ResponseWriter, errorMessage string, httpStatus int
 	} else {
 		resp.Error = errorMessage
 	}
-
-	// logs.Logger(ctx).WithFields(log.Fields{
-	// 	"error":   resp.Error,
-	// 	"message": resp.Message,
-	// 	"status":  httpStatus,
-	// }).Warn("returned error from handler")
-
 	jsonResp, _ := json.Marshal(resp)
-	// if marshal_err != nil {
-	// 	logs.Logger(ctx).Warning("Error happened in JSON marshal. Err")
-	// }
 	_, err = writer.Write(jsonResp)
-	// if err != nil {
-	// 	logs.Logger(ctx).Warning("Error writing response")
-	// }
+	if err != nil {
+		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
+	}
 }

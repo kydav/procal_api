@@ -26,6 +26,10 @@ func main() {
 		r.Group(routes.NutritionRoutes())
 		r.Group(routes.UserRoutes())
 		r.Group(routes.GoalRoutes())
+		r.Group(routes.MealRoutes())
 	})
-	http.ListenAndServe("0.0.0.0:8000", r)
+	err = http.ListenAndServe("0.0.0.0:8000", r)
+	if err != nil {
+		log.Panic(err)
+	}
 }

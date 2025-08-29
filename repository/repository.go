@@ -15,7 +15,8 @@ type Repository interface {
 	CreateRepositoryWithContext(context.Context) Repository
 	UserRepository() UserRepository
 	GoalRepository() GoalRepository
-	JournalRepository() JournalRepository
+	MealRepository() MealRepository
+	MealFoodRepository() MealFoodRepository
 }
 
 func NewRepository() Repository {
@@ -45,18 +46,20 @@ func (repo *repository) CreateRepositoryWithContext(context context.Context) Rep
 
 func buildRepositoryStruct(db *gorm.DB) Repository {
 	return &repository{
-		connection:        db,
-		userRepository:    NewUserRepository(db),
-		goalRepository:    NewGoalRepository(db),
-		journalRepository: NewJournalRepository(db),
+		connection:         db,
+		userRepository:     NewUserRepository(db),
+		goalRepository:     NewGoalRepository(db),
+		mealRepository:     NewMealRepository(db),
+		mealFoodRepository: NewMealFoodRepository(db),
 	}
 }
 
 type repository struct {
-	connection        *gorm.DB
-	userRepository    UserRepository
-	goalRepository    GoalRepository
-	journalRepository JournalRepository
+	connection         *gorm.DB
+	userRepository     UserRepository
+	goalRepository     GoalRepository
+	mealRepository     MealRepository
+	mealFoodRepository MealFoodRepository
 }
 
 func (r *repository) UserRepository() UserRepository {
@@ -67,6 +70,10 @@ func (r *repository) GoalRepository() GoalRepository {
 	return r.goalRepository
 }
 
-func (r *repository) JournalRepository() JournalRepository {
-	return r.journalRepository
+func (r *repository) MealRepository() MealRepository {
+	return r.mealRepository
+}
+
+func (r *repository) MealFoodRepository() MealFoodRepository {
+	return r.mealFoodRepository
 }
