@@ -18,6 +18,7 @@ func MealRoutes() func(chi.Router) {
 	}
 
 	return func(r chi.Router) {
+		r.HandleFunc("/meal/{userId}/{date}", MealFunc)
 		r.HandleFunc("/meal/{id}", MealFunc)
 		r.HandleFunc("/meal", MealFunc)
 	}
