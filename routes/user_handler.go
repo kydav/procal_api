@@ -65,97 +65,72 @@ func UserRouter(writer http.ResponseWriter, request *http.Request, service servi
 			return
 		}
 	default:
-		http.Error(writer, "Bad Request", http.StatusBadRequest)
+		returnError(writer, "Bad Request", http.StatusBadRequest, nil)
 	}
 }
 
 func UserByIdFinder(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	id := chi.URLParam(request, "id")
 	if id == "" {
-		http.Error(writer, "Invalid User ID", http.StatusBadRequest)
+		returnError(writer, "Invalid User ID", http.StatusBadRequest, nil)
 		return
 	}
 
 	user, err := service.FindById(request.Context(), id)
 	if err != nil {
-		http.Error(writer, "User Not Found", http.StatusNotFound)
+		returnError(writer, "User Not Found", http.StatusNotFound, err)
 		return
 	}
 	if user.ID == "" {
-		http.Error(writer, "User Not Found", http.StatusNotFound)
+		returnError(writer, "User Not Found", http.StatusNotFound, nil)
 		return
 	}
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(writer).Encode(user)
-	if err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	returnSuccess(writer, user)
 }
 
 func UserByEmailFinder(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	email := chi.URLParam(request, "email")
 	if email == "" {
-		http.Error(writer, "Email is required", http.StatusBadRequest)
+		returnError(writer, "Email is required", http.StatusBadRequest, nil)
 		return
 	}
 
 	user, err := service.FindByEmail(request.Context(), email)
 	if err != nil {
-		http.Error(writer, "User Not Found", http.StatusNotFound)
+		returnError(writer, "User Not Found", http.StatusNotFound, err)
 		return
 	}
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(writer).Encode(user); err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	returnSuccess(writer, user)
 }
 
 func UserByFirebaseUidFinder(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	firebaseUid := chi.URLParam(request, "firebaseUid")
 	if firebaseUid == "" {
-		http.Error(writer, "Firebase UID is required", http.StatusBadRequest)
+		returnError(writer, "Firebase UID is required", http.StatusBadRequest, nil)
 		return
 	}
 
 	user, err := service.FindByFirebaseUid(request.Context(), firebaseUid)
 	if err != nil {
-		http.Error(writer, "User Not Found", http.StatusNotFound)
+		returnError(writer, "User Not Found", http.StatusNotFound, err)
 		return
 	}
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(writer).Encode(user); err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	returnSuccess(writer, user)
 }
 
 func CreateUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	var user entity.User
 	if err := json.NewDecoder(request.Body).Decode(&user); err != nil {
-		http.Error(writer, "Invalid Request Body", http.StatusBadRequest)
+		returnError(writer, "Invalid Request Body", http.StatusBadRequest, err)
 		return
 	}
 
 	createdUser, err := service.Create(request.Context(), user)
 	if err != nil {
-		http.Error(writer, "Error Creating User", http.StatusInternalServerError)
+		returnError(writer, "Error Creating User", http.StatusInternalServerError, err)
 		return
 	}
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-
-	writer.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(writer).Encode(createdUser); err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	returnSuccess(writer, createdUser)
 }
 
 func UpdateUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
@@ -163,33 +138,27 @@ func UpdateUser(writer http.ResponseWriter, request *http.Request, service servi
 	decoder := json.NewDecoder(request.Body)
 	err := decoder.Decode(&user)
 	if err != nil {
-		http.Error(writer, "Invalid Request Body", http.StatusBadRequest)
+		returnError(writer, "Invalid Request Body", http.StatusBadRequest, err)
 		return
 	}
 
 	updatedUser, err := service.Update(request.Context(), user)
 	if err != nil {
-		http.Error(writer, "Error Updating User", http.StatusInternalServerError)
+		returnError(writer, "Error Updating User", http.StatusInternalServerError, err)
 		return
 	}
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(writer).Encode(updatedUser); err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	returnSuccess(writer, updatedUser)
 }
 
 func DeleteUser(writer http.ResponseWriter, request *http.Request, service services.UserService) {
 	id := chi.URLParam(request, "id")
 	if id == "" {
-		http.Error(writer, "Invalid User ID", http.StatusBadRequest)
+		returnError(writer, "Invalid User ID", http.StatusBadRequest, nil)
 		return
 	}
 
 	if err := service.Delete(request.Context(), id); err != nil {
-		http.Error(writer, "Error Deleting User", http.StatusInternalServerError)
+		returnError(writer, "Error Deleting User", http.StatusInternalServerError, err)
 		return
 	}
 

@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -103,37 +102,5 @@ func FoodFinder(writer http.ResponseWriter, request *http.Request, service servi
 		returnError(writer, "no foods found", http.StatusNotFound, nil)
 	} else {
 		returnSuccess(writer, foods)
-	}
-}
-
-func returnSuccess(writer http.ResponseWriter, responseData interface{}) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(writer).Encode(responseData); err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
-}
-
-type ErrorResponse struct {
-	Message string `json:"message"`
-	Error   string `json:"error"`
-}
-
-func returnError(writer http.ResponseWriter, errorMessage string, httpStatus int, err error) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(httpStatus)
-	var resp ErrorResponse
-
-	if err != nil {
-		resp.Error = err.Error()
-		resp.Message = errorMessage
-	} else {
-		resp.Error = errorMessage
-	}
-	jsonResp, _ := json.Marshal(resp)
-	_, err = writer.Write(jsonResp)
-	if err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
 	}
 }

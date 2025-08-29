@@ -25,7 +25,7 @@ func GoalHandler(writer http.ResponseWriter, request *http.Request) {
 	repoInterface := request.Context().Value(repository.ContextKeyRepository)
 	sessionRepo, ok := repoInterface.(repository.Repository)
 	if !ok {
-		http.Error(writer, "could not fetch repo for session", http.StatusInternalServerError)
+		returnError(writer, "could not fetch repo for session", http.StatusInternalServerError, nil)
 		return
 	}
 	goalService := services.NewGoalService(sessionRepo.GoalRepository())
@@ -56,67 +56,50 @@ func GoalRouter(writer http.ResponseWriter, request *http.Request, service servi
 			return
 		}
 	default:
-		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
+		returnError(writer, "Method not allowed", http.StatusMethodNotAllowed, nil)
 	}
 }
 
 func CreateGoal(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	var goal entity.Goal
 	if err := json.NewDecoder(request.Body).Decode(&goal); err != nil {
-		http.Error(writer, "Invalid request body", http.StatusBadRequest)
+		returnError(writer, "Invalid request body", http.StatusBadRequest, err)
 		return
 	}
 	if err := service.CreateGoal(request.Context(), &goal); err != nil {
-		http.Error(writer, "Failed to create goal", http.StatusInternalServerError)
+		returnError(writer, "Failed to create goal", http.StatusInternalServerError, err)
 		return
 	}
-	writer.WriteHeader(http.StatusCreated)
-	writer.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(writer).Encode(goal)
-	if err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	returnSuccess(writer, goal)
 }
 
 func GetGoalByID(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	id := chi.URLParam(request, "id")
 	goal, err := service.GetGoalByID(request.Context(), id)
 	if err != nil {
-		http.Error(writer, "Goal not found", http.StatusNotFound)
+		returnError(writer, "Goal not found", http.StatusNotFound, err)
 		return
 	}
-	writer.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(writer).Encode(goal)
-	if err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	returnSuccess(writer, goal)
 }
 
 func UpdateGoal(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	var goal entity.Goal
 	if err := json.NewDecoder(request.Body).Decode(&goal); err != nil {
-		http.Error(writer, "Invalid request body", http.StatusBadRequest)
+		returnError(writer, "Invalid request body", http.StatusBadRequest, err)
 		return
 	}
 	if err := service.UpdateGoal(request.Context(), &goal); err != nil {
-		http.Error(writer, "Failed to update goal", http.StatusInternalServerError)
+		returnError(writer, "Failed to update goal", http.StatusInternalServerError, err)
 		return
 	}
-	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(writer).Encode(goal)
-	if err != nil {
-		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	returnSuccess(writer, goal)
 }
 
 func DeleteGoal(writer http.ResponseWriter, request *http.Request, service services.GoalService) {
 	id := chi.URLParam(request, "id")
 	if err := service.DeleteGoal(request.Context(), id); err != nil {
-		http.Error(writer, "Failed to delete goal", http.StatusInternalServerError)
+		returnError(writer, "Failed to delete goal", http.StatusInternalServerError, err)
 		return
 	}
 	writer.WriteHeader(http.StatusNoContent)
