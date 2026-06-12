@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load("procal.env")
+	err := godotenv.Load("local.env")
 	if err != nil {
 		log.Panic(err)
 	}
